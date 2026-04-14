@@ -5,7 +5,7 @@
 
 ## Установка зависимостей
 
-bash
+
 Arch Linux / BlackArch
 sudo pacman -S gcc aircrack-ng hcxtools
 
