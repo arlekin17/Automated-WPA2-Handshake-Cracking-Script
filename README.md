@@ -1,16 +1,47 @@
-## Установка зависимостей (одной командой)
+# Automated WPA2 Handshake Cracking Script
 
-# Arch / Manjaro / BlackArch
+## Описание
+
+Этот скрипт автоматизирует процесс перехвата и взлома WPA2/WPA3 handshake (рукопожатия) Wi-Fi сетей. Инструмент предназначен для аудита безопасности собственных беспроводных сетей и проверки сложности паролей.
+
+## Возможности
+
+- **Перехват handshake** – автоматическая настройка режима мониторинга и захват WPA2/WPA3 рукопожатия
+- **Конвертация в Hashcat** – преобразование .cap файлов в формат .22000 для последующего взлома
+- **Локальный взлом** – подбор пароля с использованием hashcat и словаря rockyou2024.zip
+- **Удалённый взлом** – отправка хэша на сервер с GPU и автоматический запуск hashcat через SSH
+
+## Как это работает
+
+### Режим 1: Перехват пакета
+1. Останавливает мешающие процессы (`airmon-ng check kill`)
+2. Включает режим мониторинга Wi-Fi адаптера (`airmon-ng start wlan0`)
+3. Запрашивает MAC-адрес цели (BSSID), номер канала и имя файла
+4. Запускает `airodump-ng` для захвата handshake
+5. Ждёт подключения клиента и перехватывает рукопожатие
+
+### Режим 2: Конвертация в формат Hashcat
+1. Останавливает режим мониторинга
+2. Перезапускает NetworkManager (восстановление сети)
+3. Конвертирует `.cap` файл в `.22000` формат с помощью `hcxpcapngtool`
+
+### Режим 3: Взлом пароля
+- **Локально** – распаковывает словарь и запускает hashcat на вашем компьютере
+- **На сервере** – копирует хэш через SCP и запускает hashcat на удалённом сервере с GPU
+
+## Требования
+
+- Wi-Fi адаптер с поддержкой режима мониторинга
+- Linux (Arch, Debian, Ubuntu, Kali, Fedora)
+- Словарь паролей (например rockyou2024.zip)
+
+## Установка зависимостей
+
+# Arch Linux / BlackArch
 sudo pacman -S gcc aircrack-ng hcxtools p7zip
 
 # Debian / Ubuntu / Kali
 sudo apt update && sudo apt install -y g++ aircrack-ng hcxtools p7zip-full
 
-# Fedora / RHEL / CentOS
+# Fedora
 sudo dnf install -y gcc-c++ aircrack-ng hcxtools p7zip
-
-# openSUSE
-sudo zypper install -y gcc-c++ aircrack-ng hcxtools p7zip
-
-# Alpine
-sudo apk add g++ aircrack-ng hcxtools p7zip
