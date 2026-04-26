@@ -21,16 +21,39 @@
 #include <thread>
 #include <string>
 #include <csignal>
+#include <filesystem>
+#include <fstream> 
 #define Red "\033[0;31m"
 #define Green "\033[0;32m"
 #define white "\033[0;37m"
 #define blue "\033[0;34m"
+
 const std::string RESET = "\033[0m";
 const std::string YELLOW = "\033[33m";
 const std::string MAGENTA = "\033[35m";
 const std::string CYAN = "\033[36m";
 const std::string BOLD = "\033[1m";
 const std::string UNDERLINE = "\033[4m";
+
+std::string resolvePathStrict(const std::string& path) {
+    if (path.empty()) return "";
+    
+    std::string result = path;
+    
+    if (result[0] == '~') {
+        const char* home = std::getenv("HOME");
+        if (home) result = std::string(home) + result.substr(1);
+    }
+    
+    try {
+        return std::filesystem::canonical(result).string();
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Ошибка пути: " << e.what() << std::endl;
+        return result;
+    }
+}
+
+
 
 void signalHandler(int signum) {
     std::cout << "\n\n[!]Останавливаем мониторинг..." << std::endl;
@@ -113,7 +136,7 @@ void Deistvie(int dei){
             break;
         }
         
-            case 3:{
+    case 3: {
     std::cout << "=============================================" << std::endl;
     std::cout << Red << "выберите действие:" << white << std::endl;
     std::cout << blue << "1 - расшифровать локально" << white << std::endl;
@@ -135,10 +158,23 @@ void Deistvie(int dei){
         std::cout << "=============================================" << std::endl;
         
         std::printf("пожалуйста введите путь к словарю rockyou2024.zip: ");
-        std::string dict_path = "";
-        std::cin >> dict_path;
+        std::string dict_path_raw = "";
+        std::cin >> dict_path_raw;
         
-        std::string local_cmd = "unzip -p " + dict_path + " | hashcat -m 22000 -a 0 " + full_filename + " -O -w 3";
+        std::string dict_path = resolvePathStrict(dict_path_raw);
+        
+        std::ifstream file_check(dict_path);
+        if (!file_check.good()) {
+            std::cerr << Red << "Ошибка: файл не найден по пути: " << dict_path << RESET << std::endl;
+            std::cerr << "Пожалуйста, укажите правильный путь к словарю" << RESET << std::endl;
+            break;
+        }
+        file_check.close();
+        
+        std::cout << Green << "Использую словарь: " << dict_path << RESET << std::endl;
+        
+        std::string local_cmd = "unzip -p \"" + dict_path + "\" | hashcat -m 22000 -a 0 \"" + full_filename + "\" -O -w 3";
+        std::cout << Cyan << "Выполняется команда..." << RESET << std::endl;
         std::system(local_cmd.c_str());
     }
     else if (local_or_server == 2) {
@@ -149,6 +185,15 @@ void Deistvie(int dei){
         std::printf("пожалуйста введите абсолютный путь до файла .22000: ");
         std::string location_plus_file = "";
         std::cin >> location_plus_file;
+        
+        std::string file_22000_path = resolvePathStrict(location_plus_file);
+        
+        std::ifstream file_check(file_22000_path);
+        if (!file_check.good()) {
+            std::cerr << Red << "Ошибка: файл .22000 не найден по пути: " << file_22000_path << RESET << std::endl;
+            break;
+        }
+        file_check.close();
         
         std::printf("пожалуйста введите ваше имя и айпи от ssh в формате имя@айпи: ");
         std::string name_plus_ip_ssh = "";
@@ -162,16 +207,24 @@ void Deistvie(int dei){
         std::string put_na_servac = "";
         std::cin >> put_na_servac;
         
-        std::string scp_cmd = "scp " + location_plus_file + " " + name_plus_ip_ssh + ":" + put_na_servac + "/" + full_filename + "; ";
-        std::string ssh_cmd = "ssh -p " + port + " " + name_plus_ip_ssh + " \"cd " + put_na_servac + " && unzip -p /path/to/rockyou2024.zip | hashcat -m 22000 -a 0 " + full_filename + " -O -w 3 -d 1\"";
-        std::string full_cmd = scp_cmd + ssh_cmd;
-        std::system(full_cmd.c_str());
+        std::printf("пожалуйста введите путь к словарю rockyou2024.zip на сервере: ");
+        std::string server_dict_path = "";
+        std::cin >> server_dict_path;
+        
+        std::string scp_cmd = "scp \"" + file_22000_path + "\" " + name_plus_ip_ssh + ":" + put_na_servac + "/" + full_filename;
+        std::cout << Cyan << "Копируем файл на сервер..." << RESET << std::endl;
+        std::system(scp_cmd.c_str());
+        
+        std::string ssh_cmd = "ssh -p " + port + " " + name_plus_ip_ssh + " \"cd " + put_na_servac + " && unzip -p '" + server_dict_path + "' | hashcat -m 22000 -a 0 " + full_filename + " -O -w 3 -d 1\"";
+        std::cout << Cyan << "Запускаем расшифровку на сервере..." << RESET << std::endl;
+        std::system(ssh_cmd.c_str());
     }
     else {
-        std::printf("неверный выбор\n");
+        std::printf(RED "неверный выбор\n" RESET);
     }
     break;
 }
+
             
 
         default:
