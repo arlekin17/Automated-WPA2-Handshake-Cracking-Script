@@ -110,12 +110,3 @@ See the [LICENSE](LICENSE) file for the full legal text.
 
 ***
 
-### 💡 Важный совет:
-Чтобы лицензия работала юридически, не забудь добавить в корень твоего репозитория файл с именем **`LICENSE`** (без расширения). 
-Ты можешь сделать это прямо на GitHub:
-1. Зайди в свой репозиторий `Automated-WPA2-Handshake-Cracking-Script`.
-2. Нажми **Add file** -> **Create new file**.
-3. Назови файл `LICENSE`.
-4. Справа появится кнопка **"Choose a license template"**. Нажми её, выбери **GNU General Public License v3.0** и нажми **Review and submit**.
-
-Готово! Теперь твой проект полностью защищен лицензией GPLv3. Если нужно будет сделать то же самое для README основного проекта (Ikaros-Pocket) — просто скажи!
